@@ -1,0 +1,29 @@
+{
+  "center": [
+    60.2245961,
+    25.014318
+  ],
+  "stops": [
+    {
+      "name": "Viikin tiedepuisto — bus H3173/H3174",
+      "lat": 60.227236,
+      "lon": 25.01177,
+      "lines": "57, 78, 78N, 701",
+      "distance_m": 326
+    },
+    {
+      "name": "Viikin tiedepuisto — light rail H0720/H0721",
+      "lat": 60.22755,
+      "lon": 25.01255,
+      "lines": "15",
+      "distance_m": 343
+    },
+    {
+      "name": "Viikki — bus stop group",
+      "lat": 60.22835,
+      "lon": 25.0135,
+      "lines": "70, 73, 73N, 74, 74N, 77, 79, 79N, 506, 701",
+      "distance_m": 420
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "service_date": "2026-06-09",
+  "sample_start": "07:30:00",
+  "sample_end": "08:30:00",
+  "sample_step_min": 10,
+  "walk_speed_m_per_min": 80.0,
+  "method": "GTFS timetable-based CSA sampled departures; waiting included by schedule; union of samples approximates average waiting effects",
+  "reachable20_stops": 640,
+  "reachable30_stops": 1863,
+  "sample_summaries": [
+    {
+      "departure": "07:30:00",
+      "reachable20": 395,
+      "reachable30": 1354
+    },
+    {
+      "departure": "07:40:00",
+      "reachable20": 388,
+      "reachable30": 1440
+    },
+    {
+      "departure": "07:50:00",
+      "reachable20": 433,
+      "reachable30": 1366
+    },
+    {
+      "departure": "08:00:00",
+      "reachable20": 419,
+      "reachable30": 1420
+    },
+    {
+      "departure": "08:10:00",
+      "reachable20": 366,
+      "reachable30": 1308
+    },
+    {
+      "departure": "08:20:00",
+      "reachable20": 476,
+      "reachable30": 1422
+    },
+    {
+      "departure": "08:30:00",
+      "reachable20": 374,
+      "reachable30": 1386
+    }
+  ]
+}

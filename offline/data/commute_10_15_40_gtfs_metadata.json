@@ -1,0 +1,57 @@
+{
+  "service_date": "2026-06-09",
+  "sample_start": "07:30:00",
+  "sample_end": "08:30:00",
+  "sample_step_min": 10,
+  "walk_speed_m_per_min": 80.0,
+  "reachable_stops": {
+    "10": 69,
+    "15": 252,
+    "40": 3304
+  },
+  "sample_summaries": [
+    {
+      "departure": "07:30:00",
+      "reachable10": 44,
+      "reachable15": 164,
+      "reachable40": 2569
+    },
+    {
+      "departure": "07:40:00",
+      "reachable10": 39,
+      "reachable15": 142,
+      "reachable40": 2625
+    },
+    {
+      "departure": "07:50:00",
+      "reachable10": 53,
+      "reachable15": 173,
+      "reachable40": 2660
+    },
+    {
+      "departure": "08:00:00",
+      "reachable10": 39,
+      "reachable15": 153,
+      "reachable40": 2644
+    },
+    {
+      "departure": "08:10:00",
+      "reachable10": 34,
+      "reachable15": 120,
+      "reachable40": 2647
+    },
+    {
+      "departure": "08:20:00",
+      "reachable10": 57,
+      "reachable15": 176,
+      "reachable40": 2715
+    },
+    {
+      "departure": "08:30:00",
+      "reachable10": 39,
+      "reachable15": 143,
+      "reachable40": 2662
+    }
+  ],
+  "method": "GTFS timetable-based CSA; waiting included by scheduled departures; union of sampled departures"
+}
