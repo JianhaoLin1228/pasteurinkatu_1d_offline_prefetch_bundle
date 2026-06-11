@@ -1,0 +1,9 @@
+# Local Claude Code guidance — not part of the shipped bundle
+CLAUDE.md
+.claude/
+
+# macOS
+.DS_Store
+
+# Auto-generated undo snapshots written by the injector scripts (~17 MB each)
+offline/index_before_*.html
