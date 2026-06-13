@@ -1,1 +1,138 @@
-{"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"name": "Kämnerintie 4", "address": "Kämnerintie 4", "url": "https://hys.net/asuminen/kohteet/kamnerintie-4/"}, "geometry": {"type": "Point", "coordinates": [25.027716, 60.277833]}}, {"type": "Feature", "properties": {"name": "Kämnerintie 7", "address": "Kämnerintie 7", "url": "https://hys.net/asuminen/kohteet/kamnerintie-7/"}, "geometry": {"type": "Point", "coordinates": [25.027276, 60.275873]}}, {"type": "Feature", "properties": {"name": "Maapadontie 7", "address": "Maapadontie 7", "url": "https://hys.net/asuminen/kohteet/maapadontie-7/"}, "geometry": {"type": "Point", "coordinates": [24.947126, 60.230817]}}, {"type": "Feature", "properties": {"name": "Palovartijantie 13-17", "address": "Palovartijantie 13-17", "url": "https://hys.net/asuminen/kohteet/palovartijantie-13-17/"}, "geometry": {"type": "Point", "coordinates": [25.03081, 60.276379]}}, {"type": "Feature", "properties": {"name": "Maapadontie 11 – UUSI KOHDE", "address": "Maapadontie 11", "url": "https://hys.net/asuminen/kohteet/patolan-kulma/"}, "geometry": {"type": "Point", "coordinates": [24.947124, 60.230361]}}, {"type": "Feature", "properties": {"name": "Rautalammintie 5", "address": "Rautalammintie 5", "url": "https://hys.net/asuminen/kohteet/rautalammintie-5/"}, "geometry": {"type": "Point", "coordinates": [24.95165, 60.197572]}}, {"type": "Feature", "properties": {"name": "Rautalammintie 3d", "address": "Rautalammintie 3d", "url": "https://hys.net/asuminen/kohteet/rautalammintien-huippu/"}, "geometry": {"type": "Point", "coordinates": [24.951877, 60.197839]}}]}
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Kämnerintie 4",
+        "address": "Kämnerintie 4",
+        "url": "https://hys.net/asuminen/kohteet/kamnerintie-4/",
+        "min_rent": 255,
+        "max_rent": 682,
+        "rent_breakdown": "合租 255–388｜两室 610｜三室 682",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.027716,
+          60.277833
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Kämnerintie 7",
+        "address": "Kämnerintie 7",
+        "url": "https://hys.net/asuminen/kohteet/kamnerintie-7/",
+        "min_rent": 251,
+        "max_rent": 718,
+        "rent_breakdown": "合租 251–272｜两室 623｜三室 694–718",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.027276,
+          60.275873
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Maapadontie 7",
+        "address": "Maapadontie 7",
+        "url": "https://hys.net/asuminen/kohteet/maapadontie-7/",
+        "min_rent": 687,
+        "max_rent": 839,
+        "rent_breakdown": "两室 687–839",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.947126,
+          60.230817
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Palovartijantie 13-17",
+        "address": "Palovartijantie 13-17",
+        "url": "https://hys.net/asuminen/kohteet/palovartijantie-13-17/",
+        "min_rent": 482,
+        "max_rent": 648,
+        "rent_breakdown": "两室 482–599｜三室 648",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.03081,
+          60.276379
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Maapadontie 11 – UUSI KOHDE",
+        "address": "Maapadontie 11",
+        "url": "https://hys.net/asuminen/kohteet/patolan-kulma/",
+        "min_rent": 851,
+        "max_rent": 939,
+        "rent_breakdown": "两室 851–939",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.947124,
+          60.230361
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Rautalammintie 5",
+        "address": "Rautalammintie 5",
+        "url": "https://hys.net/asuminen/kohteet/rautalammintie-5/",
+        "min_rent": 339,
+        "max_rent": 711,
+        "rent_breakdown": "合租 339–399｜两室 522–711",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.95165,
+          60.197572
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Rautalammintie 3d",
+        "address": "Rautalammintie 3d",
+        "url": "https://hys.net/asuminen/kohteet/rautalammintien-huippu/",
+        "min_rent": 455,
+        "max_rent": 862,
+        "rent_breakdown": "单身 455–695｜两室 804–862",
+        "rent_source": "Domo (HYS) 2026-06"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.951877,
+          60.197839
+        ]
+      }
+    }
+  ]
+}

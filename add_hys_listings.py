@@ -4,8 +4,9 @@
 
 HYS publishes its properties at https://hys.net/asuminen/kohteet/ (a small set,
 ~7 buildings in the Käpylä/Koskela area). Each property page gives the street
-address; rents are NOT public (they live behind the Domo login), so markers
-show the address + a link to the property page. Geocoded with Nominatim
+address. Per-building rents are login-gated (the Domo portal), so they are
+maintained out-of-band in offline/data/hys_rents.json (keyed by address) and
+merged in here, then shown in the marker popup/tooltip. Geocoded with Nominatim
 (shared cache), filtered to the 40-minute commute area, drawn as blue 🏠
 markers with their own lower-left toggle (⑤). Cached offline.
 
@@ -176,6 +177,24 @@ else:
     fc = {'type': 'FeatureCollection', 'features': []}
     print('No HYS data and no cache; embedding empty layer.')
 
+# Attach real rents (login-gated in Domo) from the out-of-band table, keyed by
+# address, so an online re-fetch above never drops them. Re-persist the cache.
+rents_path = data / 'hys_rents.json'
+if rents_path.exists() and fc.get('features'):
+    rents = json.loads(rents_path.read_text(encoding='utf-8'))
+    merged = 0
+    for f in fc['features']:
+        r = rents.get((f.get('properties') or {}).get('address'))
+        if r:
+            f['properties'].update({
+                'min_rent': r['min_rent'], 'max_rent': r['max_rent'],
+                'rent_breakdown': r.get('rent_breakdown', ''),
+                'rent_source': r.get('source', 'Domo (HYS)'),
+            })
+            merged += 1
+    listings_cache.write_text(json.dumps(fc, ensure_ascii=False), encoding='utf-8')
+    print('Merged Domo rents into %d/%d HYS buildings.' % (merged, len(fc['features'])))
+
 # ---- inject ----------------------------------------------------------------
 text = index.read_text(encoding='utf-8')
 backup = offline / 'index_before_hys_listings.html'
@@ -225,10 +244,12 @@ js = '''<script id="hys-listings-final">
       var p = f.properties, c = f.geometry.coordinates;
       var html = '<div class="hoas-popup"><b>' + (p.name || p.address) + '</b>'
         + '<br>' + p.address
-        + '<br>HYS · <span class="rent">价格见 Domo</span>'
+        + (p.max_rent ? '<br>HYS · <span class="rent">' + p.min_rent + '–' + p.max_rent + ' €/kk</span>'
+            + (p.rent_breakdown ? '<br><span class="rent-bd">' + p.rent_breakdown + '</span>' : '')
+            : '<br>HYS · <span class="rent">价格见 Domo</span>')
         + '<br><a href="' + p.url + '" target="_blank" rel="noopener">HYS 房源页 →</a></div>';
       L.marker([c[1], c[0]], {icon:icon, pane:'hysPane', riseOnHover:true})
-        .bindPopup(html).bindTooltip((p.name || p.address), {direction:'top'})
+        .bindPopup(html).bindTooltip((p.name || p.address) + (p.max_rent ? ' · ' + p.min_rent + '–' + p.max_rent + ' €' : ''), {direction:'top'})
         .addTo(group);
     });
     return group;

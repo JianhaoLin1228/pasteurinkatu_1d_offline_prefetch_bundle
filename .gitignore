@@ -10,3 +10,7 @@ offline/index_before_*.html
 
 # Playwright MCP browser artifacts (console logs, page snapshots)
 .playwright-mcp/
+
+# Python bytecode from running the injector scripts
+__pycache__/
+*.pyc

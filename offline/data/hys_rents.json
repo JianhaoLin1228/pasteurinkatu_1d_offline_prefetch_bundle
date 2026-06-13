@@ -1,0 +1,44 @@
+{
+  "Kämnerintie 4": {
+    "min_rent": 255,
+    "max_rent": 682,
+    "rent_breakdown": "合租 255–388｜两室 610｜三室 682",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Kämnerintie 7": {
+    "min_rent": 251,
+    "max_rent": 718,
+    "rent_breakdown": "合租 251–272｜两室 623｜三室 694–718",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Maapadontie 7": {
+    "min_rent": 687,
+    "max_rent": 839,
+    "rent_breakdown": "两室 687–839",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Palovartijantie 13-17": {
+    "min_rent": 482,
+    "max_rent": 648,
+    "rent_breakdown": "两室 482–599｜三室 648",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Maapadontie 11": {
+    "min_rent": 851,
+    "max_rent": 939,
+    "rent_breakdown": "两室 851–939",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Rautalammintie 5": {
+    "min_rent": 339,
+    "max_rent": 711,
+    "rent_breakdown": "合租 339–399｜两室 522–711",
+    "source": "Domo (HYS) 2026-06"
+  },
+  "Rautalammintie 3d": {
+    "min_rent": 455,
+    "max_rent": 862,
+    "rent_breakdown": "单身 455–695｜两室 804–862",
+    "source": "Domo (HYS) 2026-06"
+  }
+}
