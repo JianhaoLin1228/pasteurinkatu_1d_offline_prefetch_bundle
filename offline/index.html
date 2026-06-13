@@ -289,7 +289,7 @@ L.control.layers({'CartoDB 浅色真实底图': carto, 'Esri 卫星影像': esri
 
 const statusEl=document.getElementById('status'), legendEl=document.getElementById('legend');
 let allBounds = L.latLngBounds([]);
-L.marker(CENTER).bindPopup('<b>Pasteurinkatu 1D</b><br>地图中心').addTo(map);
+
 L.circle(CENTER,{radius:400,color:'#111',weight:2,dashArray:'6 6',fillColor:'#ffeb3b',fillOpacity:.08}).addTo(map);
 L.circle(CENTER,{radius:500,color:'#ff9800',weight:2,dashArray:'4 8',fill:false}).addTo(map);
 const layers={};
