@@ -7,3 +7,6 @@ CLAUDE.md
 
 # Auto-generated undo snapshots written by the injector scripts (~17 MB each)
 offline/index_before_*.html
+
+# Playwright MCP browser artifacts (console logs, page snapshots)
+.playwright-mcp/
