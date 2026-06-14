@@ -200,6 +200,23 @@ h1{font-size:18px;margin:0 0 8px}.small{font-size:12px;color:#57606a;line-height
   box-shadow:0 2px 6px rgba(0,0,0,.35);
 }
 #viewControls .vc-btn.hys-active{ background:#1f6feb; color:#fff; border-color:#1f6feb; }
+
+/* Minimize/expand header added to control panels lacking their own collapse. */
+.pmin-head{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  width:100%; box-sizing:border-box; margin:0 0 6px; padding:0 0 5px;
+  border-bottom:1px solid rgba(0,0,0,.08); }
+.pmin-label{ font:600 12px system-ui,-apple-system,'Segoe UI',sans-serif; color:#333;
+  white-space:nowrap; }
+.pmin-btn{ flex:0 0 auto; width:20px; height:20px; line-height:18px; text-align:center;
+  font-size:15px; font-weight:700; color:#444; background:#fff; border:1px solid #c8c8c8;
+  border-radius:6px; cursor:pointer; padding:0; }
+.pmin-btn:hover{ background:#eee; }
+.pmin-collapsed > *:not(.pmin-head){ display:none !important; }
+.pmin-collapsed{ width:auto !important; min-width:0 !important; height:auto !important;
+  max-height:none !important; min-height:0 !important; overflow:hidden !important; }
+.pmin-collapsed .pmin-head{ margin-bottom:0; padding-bottom:0; border-bottom:none; }
+/* the language bar is a horizontal row; let the header sit on its own line */
+#langControl{ flex-wrap:wrap; }
 </style>
 </head>
 <body><div id='map'></div>
@@ -1182,6 +1199,47 @@ h1{font-size:18px;margin:0 0 8px}.small{font-size:12px;color:#57606a;line-height
   else init();
   // Controls are built asynchronously; re-apply once they exist.
   [400, 1200, 2500, 4500].forEach(function(ms){ setTimeout(function(){ if(current !== 'cn') apply(current); }, ms); });
+})();
+</script>
+
+
+
+<script id="panel-minimize-final">
+(function(){
+  function addHead(panel, label){
+    if(!panel || panel.getAttribute('data-pmin')) return;
+    panel.setAttribute('data-pmin','1');
+    var head = document.createElement('div');
+    head.className = 'pmin-head';
+    var lab = document.createElement('span');
+    lab.className = 'pmin-label'; lab.textContent = label;
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'pmin-btn'; btn.textContent = '–';
+    btn.title = '最小化 / 展开';
+    head.appendChild(lab); head.appendChild(btn);
+    panel.insertBefore(head, panel.firstChild);
+    btn.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      var c = panel.classList.toggle('pmin-collapsed');
+      btn.textContent = c ? '+' : '–';
+    });
+  }
+  function attach(){
+    try { addHead(document.querySelector('#viewControls'), '视图 / 图层'); } catch(e){}
+    // the two right-side Leaflet controls, identified by their CONTENT so a
+    // late-applied class can't mislabel them.
+    try {
+      document.querySelectorAll('.leaflet-top.leaflet-right .leaflet-control-layers').forEach(function(el){
+        var t = el.textContent || '';
+        if(/通勤|步行/.test(t)) addHead(el, '通勤圈 / 步行');
+        else if(/底图|CartoDB|卫星|矢量/.test(t)) addHead(el, '底图');
+      });
+    } catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attach);
+  else attach();
+  // panels are built by other injected scripts up to ~3.5s after load.
+  [200, 600, 1200, 2200, 3600, 5200].forEach(function(ms){ setTimeout(attach, ms); });
 })();
 </script>
 </body></html>
