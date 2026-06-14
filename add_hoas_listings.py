@@ -4,7 +4,8 @@
 
 Pipeline (online fetch -> offline cache):
   1. Read the HOAS cost-unit sitemap to list every building page (~126), then
-     fetch each page and extract its address (h1) and rent figures.
+     fetch each page and extract its address (h1), rent figures, and a
+     per-apartment-type rent breakdown (单身/合租/两室/三室/家庭).
   2. Geocode each address with OpenStreetMap Nominatim, bounded to the Helsinki
      metro viewbox (accurate, no city ambiguity). Cached on disk across runs.
   3. Keep only buildings inside the 40-minute commute area
@@ -50,6 +51,34 @@ def building_urls():
     return sorted(set(u for u in urls if not u.endswith('/housing/')))
 
 
+# Each apartment type is a heading -> "<lo> - <hi> €" card; map the English type
+# labels to short Chinese ones for a per-type popup breakdown.
+RENT_TYPES = [
+    (r'Room in a shared apartment', '合租'), (r'Studio(?: apartment)?', '单身'),
+    (r'Two-room apartment', '两室'), (r'Three-room apartment', '三室'),
+    (r'Family apartment', '家庭'),
+]
+
+
+def _plain_text(page):
+    t = re.sub(r'<script[\s\S]*?</script>', '', page)
+    t = re.sub(r'<style[\s\S]*?</style>', '', t)
+    t = html_mod.unescape(re.sub(r'<[^>]+>', ' ', t))
+    return re.sub(r'\n\s*\n+', '\n', re.sub(r'[ \t\xa0]+', ' ', t))
+
+
+def rent_breakdown(page):
+    txt = _plain_text(page)
+    parts = []
+    for pat, label in RENT_TYPES:
+        for m in re.finditer(pat + r'[^€]{0,120}?m²[^€]{0,60}?(\d{3,4})\s*(?:[-–]\s*(\d{3,4}))?\s*€', txt):
+            lo, hi = int(m.group(1)), int(m.group(2) or m.group(1))
+            if 150 <= lo <= hi <= 2500:
+                parts.append('%s %d%s' % (label, lo, ('–%d' % hi) if hi > lo else ''))
+                break  # first valid card for this type
+    return '｜'.join(parts)
+
+
 def parse_building(page):
     m = re.search(r'<h1[^>]*>(.*?)</h1>', page, re.S)
     if not m:
@@ -57,7 +86,7 @@ def parse_building(page):
     address = html_mod.unescape(re.sub(r'<[^>]+>', '', m.group(1)).strip()) if m else None
     rents = [int(v) for v in re.findall(r'(\d{3,4})\s*€', page)]
     rents = [v for v in rents if 150 <= v <= 2500]
-    return address, (min(rents) if rents else None), (max(rents) if rents else None)
+    return address, (min(rents) if rents else None), (max(rents) if rents else None), rent_breakdown(page)
 
 
 def convex_hull(points):
@@ -157,7 +186,7 @@ try:
     kept = skipped = failed = 0
     for n, u in enumerate(urls, 1):
         try:
-            address, min_rent, max_rent = parse_building(http_get(u))
+            address, min_rent, max_rent, breakdown = parse_building(http_get(u))
         except Exception as ex:
             failed += 1
             continue
@@ -172,14 +201,13 @@ try:
         if hull and not point_in_poly(ll[0], ll[1], hull):
             skipped += 1
             continue  # outside the 40-min commute area
+        props = {'address': address, 'min_rent': min_rent, 'max_rent': max_rent, 'url': u}
+        if breakdown:
+            props['rent_breakdown'] = breakdown
+            props['rent_source'] = 'hoas.fi'
         features.append({
             'type': 'Feature',
-            'properties': {
-                'address': address,
-                'min_rent': min_rent,
-                'max_rent': max_rent,
-                'url': u,
-            },
+            'properties': props,
             'geometry': {'type': 'Point', 'coordinates': ll},
         })
         kept += 1
@@ -223,6 +251,7 @@ css = '''
 }
 .hoas-popup b{ font-size:13px; }
 .hoas-popup .rent{ color:#d62728; font-weight:700; }
+.hoas-popup .rent-bd{ font-size:11px; color:#555; }
 #viewControls .vc-btn.hoas-active{ background:#d62728; color:#fff; border-color:#d62728; }
 '''
 if 'HOAS home markers (topmost)' not in text:
@@ -263,6 +292,7 @@ js = '''<script id="hoas-listings-final">
       var html = '<div class="hoas-popup"><b>' + (p.address || 'HOAS') + '</b>'
         + (p.area ? ('<br>' + p.area) : '')
         + '<br><span class="rent">' + priceLine(p) + '</span>' + m2 + avail
+        + (p.rent_breakdown ? '<br><span class="rent-bd">' + p.rent_breakdown + '</span>' : '')
         + '<br><a href="' + p.url + '" target="_blank" rel="noopener">HOAS 房源页 →</a></div>';
       L.marker([c[1], c[0]], {icon:icon, pane:'hoasPane', riseOnHover:true})
         .bindPopup(html).bindTooltip(priceLine(p), {direction:'top'})
