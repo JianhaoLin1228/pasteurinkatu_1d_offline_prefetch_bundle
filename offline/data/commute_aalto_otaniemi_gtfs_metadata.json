@@ -1,0 +1,86 @@
+{
+  "target": {
+    "name": "Aalto University Otaniemi",
+    "lat": 60.1842,
+    "lon": 24.8269
+  },
+  "service_date": "2026-06-09",
+  "sample_start": "07:30:00",
+  "sample_end": "08:30:00",
+  "sample_step_min": 10,
+  "thresholds_min": [
+    10,
+    15,
+    20,
+    30,
+    40
+  ],
+  "walk_speed_m_per_min": 80.0,
+  "reachable_stops": {
+    "10": 46,
+    "15": 74,
+    "20": 140,
+    "30": 389,
+    "40": 808
+  },
+  "sample_summaries": [
+    {
+      "departure": "07:30:00",
+      "reachable10": 38,
+      "reachable15": 66,
+      "reachable20": 127,
+      "reachable30": 311,
+      "reachable40": 586
+    },
+    {
+      "departure": "07:40:00",
+      "reachable10": 44,
+      "reachable15": 62,
+      "reachable20": 120,
+      "reachable30": 276,
+      "reachable40": 572
+    },
+    {
+      "departure": "07:50:00",
+      "reachable10": 43,
+      "reachable15": 66,
+      "reachable20": 112,
+      "reachable30": 272,
+      "reachable40": 660
+    },
+    {
+      "departure": "08:00:00",
+      "reachable10": 40,
+      "reachable15": 65,
+      "reachable20": 111,
+      "reachable30": 326,
+      "reachable40": 588
+    },
+    {
+      "departure": "08:10:00",
+      "reachable10": 38,
+      "reachable15": 64,
+      "reachable20": 111,
+      "reachable30": 287,
+      "reachable40": 625
+    },
+    {
+      "departure": "08:20:00",
+      "reachable10": 39,
+      "reachable15": 69,
+      "reachable20": 117,
+      "reachable30": 306,
+      "reachable40": 639
+    },
+    {
+      "departure": "08:30:00",
+      "reachable10": 40,
+      "reachable15": 63,
+      "reachable20": 126,
+      "reachable30": 293,
+      "reachable40": 591
+    }
+  ],
+  "feature_count": 2819,
+  "method": "Reverse GTFS timetable scan for arrivals at Aalto Otaniemi; residual walking circles at origin side"
+}
