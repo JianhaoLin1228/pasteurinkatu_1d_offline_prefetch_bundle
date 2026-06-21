@@ -1,165 +1,124 @@
 #!/usr/bin/env python3
-"""Scrape AYY housing listings from ayyasunnot.fi and geocode them."""
+"""Fetch AYY housing from domo.ayy.fi API, geocode buildings, output GeoJSON.
+
+Building detail URLs use the ayyasunnot.fi/kustannuspaikka/{slug}/ pattern,
+derived from the street address (Finnish chars mapped to ASCII, spaces → hyphens).
+"""
 import json, re, time, urllib.request, urllib.parse
 from pathlib import Path
 
-ROOT   = Path(__file__).resolve().parent
-DATA   = ROOT / 'offline' / 'data'
-OUT    = DATA / 'ayy_listings.geojson'
-CACHE  = DATA / 'geocode_cache.json'
+ROOT  = Path(__file__).resolve().parent
+DATA  = ROOT / 'offline' / 'data'
+OUT   = DATA / 'ayy_listings.geojson'
+CACHE = DATA / 'geocode_cache.json'
 
-UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+# ── Helpers ─────────────────────────────────────────────
+def addr_to_slug(addr):
+    s = addr.lower()
+    for fi, en in [('ä','a'),('ö','o'),('å','a'),('é','e'),('ü','u')]:
+        s = s.replace(fi, en)
+    s = re.sub(r'[^a-z0-9\s-]', '', s)
+    return re.sub(r'\s+', '-', s.strip())
 
-def get(url):
-    req = urllib.request.Request(url, headers={'User-Agent': UA})
+def http_get(url, accept='application/json'):
+    req = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)',
+        'Accept': accept,
+        'X-Requested-With': 'XMLHttpRequest',
+    })
     with urllib.request.urlopen(req, timeout=20) as r:
-        return r.read().decode('utf-8', errors='replace')
+        return r.read().decode('utf-8')
 
-# ── Load geocode cache ──────────────────────────────────
 geo = json.loads(CACHE.read_text()) if CACHE.exists() else {}
 
-def geocode(address, city='Finland'):
-    key = f'{address}, {city}'
+def geocode(address, city):
+    key = f'{address}, {city}, Finland'
     if key in geo:
         return geo[key]
-    q = f'{address}, {city}'
-    params = urllib.parse.urlencode({
-        'q': q, 'format': 'json', 'limit': 1,
-        'countrycodes': 'fi',
-        'viewbox': '24.40,60.50,25.55,60.05', 'bounded': 0,
-    })
+    q = urllib.parse.urlencode({'street': address, 'city': city, 'country': 'Finland',
+                                'format': 'json', 'limit': 1})
+    req = urllib.request.Request(
+        f'https://nominatim.openstreetmap.org/search?{q}',
+        headers={'User-Agent': 'AYY housing map / zhangdoudou2024@gmail.com',
+                 'Referer': 'https://ayyasunnot.fi/'}
+    )
+    ll = None
     try:
-        res = json.loads(get('https://nominatim.openstreetmap.org/search?' + params))
-        ll = [round(float(res[0]['lon']),6), round(float(res[0]['lat']),6)] if res else None
+        data = json.loads(urllib.request.urlopen(req, timeout=12).read())
+        if data:
+            ll = [round(float(data[0]['lon']), 6), round(float(data[0]['lat']), 6)]
     except Exception as e:
-        print(f'  geocode fail {q}: {e}')
-        ll = None
-    time.sleep(1.2)
+        print(f'  geocode fail {address}, {city}: {e}')
+    time.sleep(1.1)
     geo[key] = ll
     return ll
 
-# ── Scrape all pages ────────────────────────────────────
-BASE = 'https://ayyasunnot.fi'
-buildings = []
-page = 1
-while True:
-    url = f'{BASE}/asuntohaku/?page={page}'
-    print(f'Fetching page {page}: {url}')
-    html = get(url)
-    
-    # Extract building cards: /kustannuspaikka/slug/
-    cards = re.findall(
-        r'href=["\']({}/kustannuspaikka/[^"\']+)["\'].*?'
-        r'(?:Etu-Töölö|Jätkäsaari|Puotila|Teekkarikylä|Arabianranta|Herttoniemi|'
-        r'Kallio|Leppävaara|Otaniemi|Patola|Pitäjänmäki|Roihuvuori|Taka-Töölö|Vuosaari|[A-ZÄÖÅ][a-zäöå\-]+)'
-        r'.*?</a>'.format(BASE),
-        html, re.S
-    )
-    
-    # Simpler: just get all /kustannuspaikka/ links
-    slugs = re.findall(r'href=["\']({}/kustannuspaikka/([^"\']+))["\']'.format(BASE), html)
-    seen_urls = set()
-    for full_url, slug in slugs:
-        if full_url not in seen_urls:
-            seen_urls.add(full_url)
-            buildings.append({'url': full_url, 'slug': slug.strip('/')})
-    
-    # Check if there's a next page
-    if f'page={page+1}' in html or f'page={page + 1}' in html:
-        page += 1
-        time.sleep(0.5)
-    else:
-        # Check pagination text
-        m = re.search(r'/\s*(\d+)\s*</[a-z]+>\s*(?:Seuraava|Next|›)', html)
-        total_pages = int(m.group(1)) if m else page
-        if page < total_pages:
-            page += 1
-            time.sleep(0.5)
-        else:
-            break
+# ── Fetch apartments from Domo API ───────────────────────
+print('Fetching apartments from domo.ayy.fi/apartments.json ...')
+raw = json.loads(http_get('https://domo.ayy.fi/apartments.json'))
+apts = raw['apartments']
+print(f'  {len(apts)} apartments')
 
-print(f'Found {len(buildings)} buildings total')
+# ── Aggregate by building ────────────────────────────────
+buildings = {}
+for a in apts:
+    b   = a['building']
+    bid = b['id']
+    if bid not in buildings:
+        buildings[bid] = {
+            'street_address': b['street_address'],
+            'city':           b['city'] or 'Finland',
+            'building_year':  b.get('building_year'),
+            'rents': [], 'plan_types': set(),
+        }
+    if a.get('rent_cents'):
+        buildings[bid]['rents'].append(a['rent_cents'])
+    if a.get('plan_type'):
+        buildings[bid]['plan_types'].add(a['plan_type'])
 
-# ── Fetch each building page for details ────────────────
+# ── Geocode & build GeoJSON ──────────────────────────────
+plan_map = {'yksio':'studio/1h','kaksio':'2h','kolmio':'3h',
+            'solu':'solu','nelio':'4h','viisio':'5h'}
+
 features = []
-for b in buildings:
-    slug = b['slug']
-    url  = b['url']
-    print(f'  Fetching {slug}...')
-    try:
-        html = get(url)
-        time.sleep(0.3)
-    except Exception as e:
-        print(f'    FAIL: {e}')
-        continue
-    
-    # Extract address from slug (e.g. jamerantaival-1 → Jämeräntaival 1)
-    # Also try to extract from page content
-    addr_from_page = None
-    
-    # Try h1 or address fields
-    m = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.S)
-    if m:
-        addr_from_page = re.sub(r'<[^>]+>', '', m.group(1)).strip()
-    
-    # Extract neighborhood
-    neighborhood = None
-    m = re.search(r'(?:kaupunginosa|Kaupunginosa|area)[^>]*>([^<]+)<', html, re.I)
-    if m:
-        neighborhood = m.group(1).strip()
-    
-    # Extract rent range
-    rent = None
-    m = re.search(r'(\d[\d\s,\.]+)\s*[–\-]\s*(\d[\d\s,\.]+)\s*€/kk', html)
-    if m:
-        rent = f'{m.group(1).strip()}–{m.group(2).strip()} €/kk'
-    else:
-        m = re.search(r'(\d[\d\s,\.]+)\s*€/kk', html)
-        if m:
-            rent = f'{m.group(1).strip()} €/kk'
-    
-    # Extract room types
-    rooms = re.findall(r'\b(Solu|1h|2h|3h|4h|[Ss]tudio)\b', html)
-    room_types = ', '.join(sorted(set(rooms))) if rooms else None
-    
-    # Build address from slug
-    slug_clean = slug.replace('-', ' ')
-    m = re.match(r'([a-zäöåA-ZÄÖÅ\s]+?)\s+(\d+[a-z]?)$', slug_clean)
-    if m:
-        street = m.group(1).title()
-        num    = m.group(2)
-        addr   = f'{street} {num}'
-    else:
-        addr = addr_from_page or slug_clean.title()
-    
-    # Geocode
-    # Try common Finnish city names
-    ll = None
-    for city in ['Espoo, Finland', 'Helsinki, Finland', 'Vantaa, Finland', 'Finland']:
-        ll = geocode(addr, city.replace(', Finland', '').strip() if ', ' in city else city)
-        if ll:
-            break
-    
+for bid, b in sorted(buildings.items()):
+    addr = b['street_address']
+    city = b['city']
+    print(f'Geocoding: {addr}, {city}')
+    ll = geocode(addr, city)
     if not ll:
-        print(f'    No coords for {addr}')
+        ll = geocode(addr, 'Finland')
+    if not ll:
+        print(f'  SKIP: no coords for {addr}')
         continue
-    
-    props = {
-        'address':      addr,
-        'neighborhood': neighborhood,
-        'rent':         rent,
-        'room_types':   room_types,
-        'url':          url,
-    }
+
+    rents = b['rents']
+    rent_str = None
+    if rents:
+        lo, hi = min(rents) // 100, max(rents) // 100
+        rent_str = f'€{lo}' if lo == hi else f'€{lo}–{hi}'
+
+    types = sorted(plan_map.get(t, t) for t in b['plan_types'])
+    slug  = addr_to_slug(addr)
+    n_units = sum(1 for a in apts if a['building']['id'] == bid)
+
     features.append({
         'type': 'Feature',
-        'properties': {k: v for k, v in props.items() if v is not None},
+        'properties': {
+            'address':    addr,
+            'city':       city,
+            'rent':       rent_str,
+            'room_types': ', '.join(types) if types else None,
+            'year_built': b['building_year'],
+            'url':        f'https://ayyasunnot.fi/kustannuspaikka/{slug}/',
+            'n_units':    n_units,
+        },
         'geometry': {'type': 'Point', 'coordinates': ll}
     })
-    print(f'    OK: {addr} → {ll}, rent={rent}')
+    print(f'  OK → {ll}  rent={rent_str}  {n_units} units')
 
-# ── Save ────────────────────────────────────────────────
-CACHE.write_text(json.dumps(geo, ensure_ascii=False, indent=None), encoding='utf-8')
+# ── Save ─────────────────────────────────────────────────
+CACHE.write_text(json.dumps(geo, ensure_ascii=False), encoding='utf-8')
 fc = {'type': 'FeatureCollection', 'features': features}
 OUT.write_text(json.dumps(fc, ensure_ascii=False), encoding='utf-8')
-print(f'\nSaved {len(features)} AYY buildings to {OUT}')
+print(f'\nSaved {len(features)}/{len(buildings)} buildings → {OUT}')

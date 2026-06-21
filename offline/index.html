@@ -364,7 +364,7 @@ function ayyPopup(p) {
   const types = p.room_types ? `<br>${p.room_types}` : '';
   const yr = p.year_built ? ` (${p.year_built})` : '';
   const units = p.n_units ? `<br>${p.n_units} 套` : '';
-  return `<b>${p.address}</b>${yr}<br>${p.city}${rent}${types}${units}<br><a href="${p.url}" target="_blank">申请 (Domo) →</a>`;
+  return `<b>${p.address}</b>${yr}<br>${p.city}${rent}${types}${units}<br><a href="${p.url}" target="_blank">楼栋详情 →</a>`;
 }
 
 async function loadAyy() {
