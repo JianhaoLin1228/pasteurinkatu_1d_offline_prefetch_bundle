@@ -90,7 +90,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
   <div class="section">
     <div class="label">目标校区</div>
     <div class="grid2">
-      <button class="btn on" id="btn-viikki" onclick="setCampus('viikki')">Viikki</button>
+      <button class="btn on" id="btn-viikki" onclick="setCampus('viikki')">赫尔辛基大学 Viikki</button>
       <button class="btn"    id="btn-aalto"  onclick="setCampus('aalto')">Aalto Otaniemi</button>
     </div>
   </div>
@@ -112,7 +112,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
     <div class="grid2">
       <button class="btn" id="btn-hoas" onclick="toggleLayer('hoas')">HOAS</button>
       <button class="btn" id="btn-hys"  onclick="toggleLayer('hys')">HYS</button>
-      <button class="btn" id="btn-ayy"  onclick="toggleLayer('ayy')" style="grid-column:1/-1">AYY (Domo)</button>
+      <button class="btn" id="btn-ayy"  onclick="toggleLayer('ayy')" style="display:none;grid-column:1/-1">AYY (Domo)</button>
     </div>
   </div>
 
@@ -198,6 +198,19 @@ const walkGroup = L.layerGroup([
   L.circle(HOME, { radius:10*WALK_SPEED, color:'#16a34a', weight:1.5, dashArray:'5 4', fill:false, opacity:.55 }).bindPopup('10 分钟步行圈（~800 m）'),
   L.circle(HOME, { radius:15*WALK_SPEED, color:'#0f766e', weight:1.5, dashArray:'8 5', fill:false, opacity:.45 }).bindPopup('15 分钟步行圈（~1200 m）')
 ]);
+
+/* ── House icon factory ── */
+function houseIcon(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" viewBox="0 0 28 30">
+    <polygon points="14,1 1,13 5,13 5,29 23,29 23,13 27,13"
+      fill="${color}" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="10" y="18" width="8" height="11" fill="rgba(255,255,255,0.3)" rx="1"/>
+  </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize:[28,30], iconAnchor:[14,30], popupAnchor:[0,-30] });
+}
+const ICON_HOAS = houseIcon('#dc2626');
+const ICON_HYS  = houseIcon('#2563eb');
+const ICON_AYY  = houseIcon('#7c3aed');
 
 const commuteGroup = L.layerGroup().addTo(map);
 const hoasGroup    = L.layerGroup().addTo(map);
@@ -322,11 +335,31 @@ async function setCampus(c) {
   document.querySelectorAll('#thr-btns .btn').forEach(b => b.classList.remove('on'));
   document.getElementById('commute-legend').classList.remove('visible');
   updateThrButtons();
+
+  // Housing availability: HYS = UH only, AYY = Aalto only, HOAS = both
+  const btnHys = document.getElementById('btn-hys');
+  const btnAyy = document.getElementById('btn-ayy');
+  if (c === 'aalto') {
+    btnHys.style.display = 'none';
+    btnAyy.style.display = '';
+    if (layerOn.hys) {
+      layerOn.hys = false; hysGroup.clearLayers();
+      btnHys.classList.remove('on-blue');
+    }
+  } else {
+    btnAyy.style.display = 'none';
+    btnHys.style.display = '';
+    if (layerOn.ayy) {
+      layerOn.ayy = false; ayyGroup.clearLayers();
+      btnAyy.classList.remove('on');
+    }
+  }
+
   const v = CAMPUS_CFG[c].view;
   if (v.bounds) map.fitBounds(v.bounds, { padding:[24,24] });
   else map.setView(v.ll, v.zoom);
   if (layerOn.hoas) { hoasGroup.clearLayers(); delete cache.hoas[c]; await loadHousing('hoas'); }
-  if (layerOn.hys)  { hysGroup.clearLayers();  delete cache.hys[c];  await loadHousing('hys'); }
+  if (layerOn.hys && c==='viikki') { hysGroup.clearLayers(); delete cache.hys[c]; await loadHousing('hys'); }
 }
 
 /* ── Housing ── */
@@ -352,7 +385,7 @@ async function loadHousing(type) {
   grp.clearLayers();
   cache[type][campus].features.forEach(f => {
     const [lon, lat] = f.geometry.coordinates;
-    L.circleMarker([lat,lon], { radius:6, color:'#fff', fillColor: isHoas?'#dc2626':'#2563eb', fillOpacity:.85, weight:1.5 })
+    L.marker([lat,lon], { icon: isHoas ? ICON_HOAS : ICON_HYS })
       .bindPopup(isHoas ? hoasPopup(f.properties) : hysPopup(f.properties))
       .addTo(grp);
   });
@@ -376,9 +409,8 @@ async function loadAyy() {
   ayyGroup.clearLayers();
   cache.ayy.features.forEach(f => {
     const [lon, lat] = f.geometry.coordinates;
-    L.circleMarker([lat, lon], {
-      radius: 7, color: '#fff', fillColor: '#7c3aed', fillOpacity: .85, weight: 1.5
-    }).bindPopup(ayyPopup(f.properties)).addTo(ayyGroup);
+    L.marker([lat, lon], { icon: ICON_AYY })
+      .bindPopup(ayyPopup(f.properties)).addTo(ayyGroup);
   });
 }
 
