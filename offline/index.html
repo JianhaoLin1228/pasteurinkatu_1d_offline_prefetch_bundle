@@ -194,10 +194,19 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
 L.circleMarker(HOME, { radius:8, color:'#fff', fillColor:'#ef4444', fillOpacity:1, weight:2.5 })
   .bindPopup('<b>Pasteurinkatu 1D</b>').addTo(map);
 
-const walkGroup = L.layerGroup([
-  L.circle(HOME, { radius:10*WALK_SPEED, color:'#16a34a', weight:1.5, dashArray:'5 4', fill:false, opacity:.55 }).bindPopup('10 分钟步行圈（~800 m）'),
-  L.circle(HOME, { radius:15*WALK_SPEED, color:'#0f766e', weight:1.5, dashArray:'8 5', fill:false, opacity:.45 }).bindPopup('15 分钟步行圈（~1200 m）')
-]);
+const CAMPUS_CENTER = {
+  viikki: [60.2268, 25.0196],
+  aalto:  [60.1842, 24.8269],
+};
+const walkGroup = L.layerGroup();
+function rebuildWalkCircles(c) {
+  walkGroup.clearLayers();
+  const center = CAMPUS_CENTER[c];
+  L.circle(center, { radius:10*WALK_SPEED, color:'#16a34a', weight:1.5, dashArray:'5 4', fill:false, opacity:.55 })
+    .bindPopup('10 分钟步行圈（~800 m）').addTo(walkGroup);
+  L.circle(center, { radius:15*WALK_SPEED, color:'#0f766e', weight:1.5, dashArray:'8 5', fill:false, opacity:.45 })
+    .bindPopup('15 分钟步行圈（~1200 m）').addTo(walkGroup);
+}
 
 /* ── House icon factory ── */
 function houseIcon(color) {
@@ -365,6 +374,7 @@ async function setCampus(c) {
   else map.setView(v.ll, v.zoom);
   if (layerOn.hoas) { hoasGroup.clearLayers(); delete cache.hoas[c]; await loadHousing('hoas'); }
   if (layerOn.hys && c==='viikki') { hysGroup.clearLayers(); delete cache.hys[c]; await loadHousing('hys'); }
+  if (layerOn.walk) rebuildWalkCircles(c);
 }
 
 /* ── Housing ── */
@@ -445,12 +455,13 @@ async function toggleLayer(type) {
       }).addTo(zonesGroup);
     } else { zonesGroup.clearLayers(); }
   } else if (type === 'walk') {
-    if (on) walkGroup.addTo(map); else map.removeLayer(walkGroup);
+    if (on) { rebuildWalkCircles(campus); walkGroup.addTo(map); } else map.removeLayer(walkGroup);
   }
 }
 
 /* ── Init ── */
 updateThrButtons();
+rebuildWalkCircles(campus);
 initRoutes();
 </script>
 </body>
