@@ -198,6 +198,41 @@ const CAMPUS_CENTER = {
   viikki: [60.2268, 25.0196],
   aalto:  [60.1842, 24.8269],
 };
+
+/* ── Campus centre marker (H / A) ── */
+function makeCampusIcon(letter, color) {
+  return L.divIcon({
+    html: `<div style="
+      width:32px;height:32px;border-radius:50%;
+      background:${color};border:2.5px solid #fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
+      font:700 15px/1 system-ui,sans-serif;color:#fff;
+    ">${letter}</div>`,
+    className: '',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -18],
+  });
+}
+const CAMPUS_ICON = {
+  viikki: makeCampusIcon('H', '#0055a4'),
+  aalto:  makeCampusIcon('A', '#e94520'),
+};
+const CAMPUS_LABEL = {
+  viikki: 'Viikki Campus · University of Helsinki',
+  aalto:  'Otaniemi Campus · Aalto University',
+};
+let campusMarker = L.marker(CAMPUS_CENTER.viikki, { icon: CAMPUS_ICON.viikki })
+  .bindPopup(CAMPUS_LABEL.viikki)
+  .addTo(map);
+
+function updateCampusMarker(c) {
+  campusMarker.setLatLng(CAMPUS_CENTER[c])
+              .setIcon(CAMPUS_ICON[c])
+              .setPopupContent(CAMPUS_LABEL[c]);
+}
+
 const walkGroup = L.layerGroup();
 function rebuildWalkCircles(c) {
   walkGroup.clearLayers();
@@ -344,6 +379,7 @@ async function setCampus(c) {
   campus = c;
   document.getElementById('btn-viikki').classList.toggle('on', c==='viikki');
   document.getElementById('btn-aalto').classList.toggle('on',  c==='aalto');
+  updateCampusMarker(c);
   threshold = 0;
   commuteGroup.clearLayers();
   document.querySelectorAll('#thr-btns .btn').forEach(b => b.classList.remove('on'));
