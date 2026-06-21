@@ -112,6 +112,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
     <div class="grid2">
       <button class="btn" id="btn-hoas" onclick="toggleLayer('hoas')">HOAS</button>
       <button class="btn" id="btn-hys"  onclick="toggleLayer('hys')">HYS</button>
+      <button class="btn" id="btn-ayy"  onclick="toggleLayer('ayy')" style="grid-column:1/-1">AYY (Domo)</button>
     </div>
   </div>
 
@@ -176,8 +177,8 @@ const ZONE_COLORS   = { A:'#22c55e', B:'#2563eb', C:'#f97316', D:'#7c3aed' };
 
 let campus    = 'viikki';
 let threshold = 0;
-const layerOn = { hoas:false, hys:false, zones:false, walk:false };
-const cache   = { commute:{}, hoas:{}, hys:{}, zones:null };
+const layerOn = { hoas:false, hys:false, ayy:false, zones:false, walk:false };
+const cache   = { commute:{}, hoas:{}, hys:{}, ayy:null, zones:null };
 const routeGroups = {};
 
 /* ── Map ── */
@@ -201,6 +202,7 @@ const walkGroup = L.layerGroup([
 const commuteGroup = L.layerGroup().addTo(map);
 const hoasGroup    = L.layerGroup().addTo(map);
 const hysGroup     = L.layerGroup().addTo(map);
+const ayyGroup     = L.layerGroup().addTo(map);
 const zonesGroup   = L.layerGroup().addTo(map);
 
 /* ── Loading ── */
@@ -356,11 +358,35 @@ async function loadHousing(type) {
   });
 }
 
+/* ── AYY ── */
+function ayyPopup(p) {
+  const rent = p.rent ? `<br>${p.rent}/月` : '';
+  const types = p.room_types ? `<br>${p.room_types}` : '';
+  const yr = p.year_built ? ` (${p.year_built})` : '';
+  const units = p.n_units ? `<br>${p.n_units} 套` : '';
+  return `<b>${p.address}</b>${yr}<br>${p.city}${rent}${types}${units}<br><a href="${p.url}" target="_blank">申请 (Domo) →</a>`;
+}
+
+async function loadAyy() {
+  if (!cache.ayy) {
+    setLoading(true);
+    try { cache.ayy = await fetchJson('data/ayy_listings.geojson'); }
+    finally { setLoading(false); }
+  }
+  ayyGroup.clearLayers();
+  cache.ayy.features.forEach(f => {
+    const [lon, lat] = f.geometry.coordinates;
+    L.circleMarker([lat, lon], {
+      radius: 7, color: '#fff', fillColor: '#7c3aed', fillOpacity: .85, weight: 1.5
+    }).bindPopup(ayyPopup(f.properties)).addTo(ayyGroup);
+  });
+}
+
 /* ── Toggle ── */
 async function toggleLayer(type) {
   layerOn[type] = !layerOn[type];
   const on = layerOn[type];
-  const cfg = { hoas:['btn-hoas','on-red'], hys:['btn-hys','on-blue'], zones:['btn-zones','on'], walk:['btn-walk','on'] };
+  const cfg = { hoas:['btn-hoas','on-red'], hys:['btn-hys','on-blue'], ayy:['btn-ayy','on'], zones:['btn-zones','on'], walk:['btn-walk','on'] };
   const [id, cls] = cfg[type];
   document.getElementById(id).classList.toggle(cls, on);
 
@@ -368,6 +394,8 @@ async function toggleLayer(type) {
     if (on) await loadHousing('hoas'); else hoasGroup.clearLayers();
   } else if (type === 'hys') {
     if (on) await loadHousing('hys'); else hysGroup.clearLayers();
+  } else if (type === 'ayy') {
+    if (on) await loadAyy(); else ayyGroup.clearLayers();
   } else if (type === 'zones') {
     if (on) {
       if (!cache.zones) {
