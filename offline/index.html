@@ -39,6 +39,11 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 .btn.on-blue { background: #2563eb; border-color: #2563eb; color: #fff; }
 .btn.inactive { opacity: .35; cursor: default; }
 
+/* Commute slider */
+#thr-row { display:flex; align-items:center; gap:8px; }
+#thr-slider { flex:1; accent-color:#1d4ed8; cursor:pointer; }
+#thr-label { font-size:11px; font-weight:700; color:#1d4ed8; min-width:38px; text-align:right; }
+
 /* Route list */
 #routes-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .routes-head {
@@ -97,13 +102,10 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 
   <div class="section">
     <div class="label">通勤时间圈</div>
-    <div class="grid3" id="thr-btns">
-      <button class="btn" data-min="10" onclick="setThreshold(10)">≤10 min</button>
-      <button class="btn" data-min="15" onclick="setThreshold(15)">≤15 min</button>
-      <button class="btn" data-min="20" onclick="setThreshold(20)">≤20 min</button>
-      <button class="btn" data-min="30" onclick="setThreshold(30)">≤30 min</button>
-      <button class="btn" data-min="40" onclick="setThreshold(40)">≤40 min</button>
-      <button class="btn" data-min="0"  onclick="setThreshold(0)">关闭</button>
+    <div id="thr-row">
+      <input type="range" id="thr-slider" min="0" max="5" step="1" value="0"
+             oninput="onSlider(this.value)">
+      <span id="thr-label">关闭</span>
     </div>
   </div>
 
@@ -332,31 +334,28 @@ async function ensureCommute(c) {
   } finally { setLoading(false); }
 }
 
-function renderCommute(data, maxMin) {
+const THR_STEPS  = [0, 10, 15, 20, 30, 40];
+const THR_LABELS = ['关闭', '10 min', '15 min', '20 min', '30 min', '40 min'];
+
+function renderCommute(data, minutes) {
   commuteGroup.clearLayers();
-  if (!maxMin || !data) return;
-  const fills = [], outlines = [];
+  if (!minutes || !data) return;
   data.features.forEach(f => {
     const p = f.properties || {};
-    const m = Number(p.minutes);
-    if (m > maxMin || f.geometry.type !== 'Polygon') return;
+    if (Number(p.minutes) !== minutes) return;
+    if (f.geometry.type !== 'Polygon') return;
+    if (p.kind !== 'convex_hull_outline') return;
     const lls = f.geometry.coordinates[0].map(c => [c[1],c[0]]);
-    const color = COMMUTE_COLORS[m] || '#666';
-    if (p.kind === 'residual_walk_circle') {
-      fills.push(L.polygon(lls, { color, weight:0, fillColor:color, fillOpacity:.09 }));
-    } else if (p.kind === 'convex_hull_outline') {
-      outlines.push(L.polygon(lls, { color, weight: m===40?3:2.5, fill:false, dashArray: m===40?'10 5':'6 4', opacity:.9 })
-        .bindPopup(m+' 分钟通勤圈（早高峰 GTFS+等候时间）'));
-    }
+    const color = COMMUTE_COLORS[minutes] || '#666';
+    L.polygon(lls, { color, weight:2.5, fill:false, dashArray:'6 4', opacity:.9 })
+      .bindPopup(minutes+' 分钟通勤圈（早高峰 GTFS+等候时间）')
+      .addTo(commuteGroup);
   });
-  fills.forEach(l => l.addTo(commuteGroup));
-  outlines.forEach(l => l.addTo(commuteGroup));
   document.getElementById('commute-legend').classList.add('visible');
 }
 
 async function setThreshold(t) {
   threshold = t;
-  document.querySelectorAll('#thr-btns .btn').forEach(b => b.classList.toggle('on', Number(b.dataset.min)===t));
   commuteGroup.clearLayers();
   if (!t) { document.getElementById('commute-legend').classList.remove('visible'); return; }
   await ensureCommute(campus);
@@ -364,13 +363,13 @@ async function setThreshold(t) {
   bringRoutesToTop();
 }
 
-function updateThrButtons() {
-  const avail = CAMPUS_CFG[campus].availMin;
-  document.querySelectorAll('#thr-btns .btn').forEach(b => {
-    const m = Number(b.dataset.min);
-    b.classList.toggle('inactive', m !== 0 && !avail.includes(m));
-  });
+function onSlider(val) {
+  const t = THR_STEPS[Number(val)];
+  document.getElementById('thr-label').textContent = THR_LABELS[Number(val)];
+  setThreshold(t);
 }
+
+function updateThrButtons() {}  // no-op: slider has no inactive states
 
 /* ── Campus ── */
 async function setCampus(c) {
@@ -380,9 +379,9 @@ async function setCampus(c) {
   updateCampusMarker(c);
   threshold = 0;
   commuteGroup.clearLayers();
-  document.querySelectorAll('#thr-btns .btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('thr-slider').value = 0;
+  document.getElementById('thr-label').textContent = '关闭';
   document.getElementById('commute-legend').classList.remove('visible');
-  updateThrButtons();
 
   // Housing availability: HYS = UH only, AYY = Aalto only, HOAS = both
   const btnHys = document.getElementById('btn-hys');
@@ -494,7 +493,6 @@ async function toggleLayer(type) {
 }
 
 /* ── Init ── */
-updateThrButtons();
 rebuildWalkCircles(campus);
 initRoutes();
 </script>
