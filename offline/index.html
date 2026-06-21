@@ -158,14 +158,14 @@ const WALK_SPEED = 80;
 const CAMPUS_CFG = {
   viikki: {
     view: { ll: [60.229, 25.016], zoom: 13 },
-    commuteFile: 'data/commute_isochrones.geojson',
+    commuteFiles: ['data/commute_isochrones.geojson', 'data/commute_10_15_40_gtfs.geojson'],
     hoasFile: 'data/hoas_listings.geojson',
     hysFile:  'data/hys_listings.geojson',
-    availMin: [20, 30]
+    availMin: [10, 15, 20, 30, 40]
   },
   aalto: {
     view: { bounds: [[60.170, 24.795], [60.205, 24.870]] },
-    commuteFile: 'data/commute_aalto_otaniemi_gtfs.geojson',
+    commuteFiles: ['data/commute_aalto_otaniemi_gtfs.geojson'],
     hoasFile: 'data/hoas_listings_aalto_otaniemi.geojson',
     hysFile:  'data/hys_listings_aalto_otaniemi.geojson',
     availMin: [10, 15, 20, 30, 40]
@@ -281,8 +281,13 @@ map.on('layeradd', () => setTimeout(bringRoutesToTop, 60));
 async function ensureCommute(c) {
   if (cache.commute[c]) return;
   setLoading(true);
-  try { cache.commute[c] = await fetchJson(CAMPUS_CFG[c].commuteFile); }
-  finally { setLoading(false); }
+  try {
+    const files = CAMPUS_CFG[c].commuteFiles;
+    const datasets = await Promise.all(files.map(f => fetchJson(f)));
+    const merged = { type: 'FeatureCollection', features: [] };
+    datasets.forEach(d => merged.features.push(...d.features));
+    cache.commute[c] = merged;
+  } finally { setLoading(false); }
 }
 
 function renderCommute(data, maxMin) {
