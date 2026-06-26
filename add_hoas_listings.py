@@ -25,6 +25,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from hoas_page_parser import parse_housing_page
+
 SITEMAP_URL = 'https://hoas.fi/cost-unit-sitemap.xml'
 
 root = Path(__file__).resolve().parent
@@ -80,13 +82,9 @@ def rent_breakdown(page):
 
 
 def parse_building(page):
-    m = re.search(r'<h1[^>]*>(.*?)</h1>', page, re.S)
-    if not m:
-        m = re.search(r'<title>(.*?)\s*-\s*Hoas', page, re.S | re.I)
-    address = html_mod.unescape(re.sub(r'<[^>]+>', '', m.group(1)).strip()) if m else None
-    rents = [int(v) for v in re.findall(r'(\d{3,4})\s*€', page)]
-    rents = [v for v in rents if 150 <= v <= 2500]
-    return address, (min(rents) if rents else None), (max(rents) if rents else None), rent_breakdown(page)
+    details = parse_housing_page(page)
+    return (details['address'], details['min_rent'], details['max_rent'],
+            details['condition'], rent_breakdown(page))
 
 
 def convex_hull(points):
@@ -186,7 +184,7 @@ try:
     kept = skipped = failed = 0
     for n, u in enumerate(urls, 1):
         try:
-            address, min_rent, max_rent, breakdown = parse_building(http_get(u))
+            address, min_rent, max_rent, condition, breakdown = parse_building(http_get(u))
         except Exception as ex:
             failed += 1
             continue
@@ -201,7 +199,8 @@ try:
         if hull and not point_in_poly(ll[0], ll[1], hull):
             skipped += 1
             continue  # outside the 40-min commute area
-        props = {'address': address, 'min_rent': min_rent, 'max_rent': max_rent, 'url': u}
+        props = {'address': address, 'min_rent': min_rent, 'max_rent': max_rent,
+                 'condition': condition, 'url': u}
         if breakdown:
             props['rent_breakdown'] = breakdown
             props['rent_source'] = 'hoas.fi'
