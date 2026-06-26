@@ -83,7 +83,9 @@ for marker in ["<script id='" + script_id + "'>", '<script id="' + script_id + '
 
 css = '''
 /* Active state for the HSL zone toggle button. */
-#viewControls .vc-btn.active{ background:#0969da; color:#fff; border-color:#0969da; }
+#viewControls .vc-btn.active{
+  background:#0969da; color:#fff; border-color:#0969da;
+}
 .hsl-zone-label{ background:rgba(255,255,255,.85); border:1px solid #999; border-radius:6px;
   padding:0 5px; font-weight:700; color:#333; font-size:12px; }
 '''
