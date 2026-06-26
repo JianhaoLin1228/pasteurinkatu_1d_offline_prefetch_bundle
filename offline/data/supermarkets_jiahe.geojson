@@ -1,0 +1,145 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Jiahe Asian Market",
+        "address": "Miina Sillanpään katu 7, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.9541676,
+          60.179956
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "GC Asian Supermarket",
+        "address": "Konstaapelinkatu 4, Espoo"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.8130274,
+          60.2214077
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "DFH Asian Market",
+        "address": "Miina Sillanpään katu 3, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.9532409,
+          60.1799549
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "RF Asian Market (Kallio)",
+        "address": "Kaisaniemenkatu 3, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.9473973,
+          60.171266
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "RF Asian Market (Itäkeskus)",
+        "address": "Itäkatu 1-7, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.0819082,
+          60.2107515
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "RF Asian Market (Herttoniemi)",
+        "address": "Insinöörinkatu 2, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.0334904,
+          60.194025
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Golden Crop Asian Supermarket",
+        "address": "Tammiston kauppatie 6, Vantaa"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.9698522,
+          60.2753716
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Jasmine Asian Market",
+        "address": "Kirkkojärventie 10C, Espoo"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.6576807,
+          60.2059782
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Espoo Asian Market",
+        "address": "Asemakuja 1, Espoo"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24.6598335,
+          60.204353
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Solu Afro Asian Food Market",
+        "address": "Hiihtomäentie 14, Helsinki"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.0289246,
+          60.1948521
+        ]
+      }
+    }
+  ]
+}

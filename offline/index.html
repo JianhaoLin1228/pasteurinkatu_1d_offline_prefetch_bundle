@@ -44,6 +44,50 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 #thr-slider { flex:1; accent-color:#1d4ed8; cursor:pointer; }
 #thr-label { font-size:11px; font-weight:700; color:#1d4ed8; min-width:38px; text-align:right; }
 
+/* Global search */
+#gs-wrap {
+  position: fixed; top: 10px; right: 10px; z-index: 1000; width: 260px;
+}
+#gs-input {
+  width: 100%; padding: 7px 12px; border: 1.5px solid #d1d5db; border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: #1f2937; outline: none;
+  background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.13);
+  transition: border-color .15s;
+}
+#gs-input:focus { border-color: #6366f1; box-shadow: 0 2px 14px rgba(99,102,241,.18); }
+#gs-results {
+  display: none; margin-top: 4px; background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 8px; box-shadow: 0 4px 18px rgba(0,0,0,.13);
+  max-height: 380px; overflow-y: auto;
+}
+#gs-results.visible { display: block; }
+.gs-group-head {
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: #9ca3af; padding: 8px 12px 3px; border-top: 1px solid #f3f4f6;
+}
+.gs-group-head:first-child { border-top: none; }
+.gs-item {
+  padding: 6px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 1px;
+}
+.gs-item:hover { background: #f3f4f6; }
+.gs-addr { font-size: 12px; font-weight: 600; color: #1f2937; }
+.gs-meta { font-size: 11px; color: #6b7280; }
+.gs-more { font-size: 11px; color: #9ca3af; padding: 3px 12px 6px; }
+.gs-empty { font-size: 12px; color: #9ca3af; text-align: center; padding: 14px; }
+
+/* Supermarket toggle buttons */
+#super-btns { display: flex; gap: 5px; margin-top: 5px; }
+.s-btn {
+  flex: 1; padding: 5px 4px; border-radius: 7px; border: 1.5px solid #d1d5db;
+  background: #fff; font-size: 11px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1); transition: background .12s, border-color .12s, color .12s;
+}
+.s-btn:hover { background: #f3f4f6; }
+#sbtn-k.on    { background: #e8711a; border-color: #e8711a; color: #fff; }
+#sbtn-s.on    { background: #2d8a3e; border-color: #2d8a3e; color: #fff; }
+#sbtn-lidl.on  { background: #0050aa; border-color: #0050aa; color: #fff; }
+#sbtn-jiahe.on { background: #c0392b; border-color: #c0392b; color: #fff; }
+
 /* Route list */
 #routes-section { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .routes-head {
@@ -81,6 +125,19 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 #commute-legend.visible { display: block; }
 .leg-row { display: flex; align-items: center; gap: 6px; }
 .leg-line { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+/* Language bar */
+#lang-bar {
+  padding: 8px 14px; border-top: 1px solid #e5e7eb;
+  display: flex; gap: 5px; flex-shrink: 0; background: #f9fafb;
+}
+.lang-btn {
+  flex: 1; padding: 5px 4px; border: 1.5px solid #d1d5db; border-radius: 6px;
+  background: #fff; font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.lang-btn:hover { background: #f3f4f6; }
+.lang-btn.on { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
 </style>
 </head>
 <body>
@@ -88,12 +145,12 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 
 <div id="sidebar">
   <div class="s-head">
-    <h1>校园通勤地图</h1>
+    <h1 id="ui-title">校园通勤地图</h1>
     <p>Pasteurinkatu 1D · Helsinki</p>
   </div>
 
   <div class="section">
-    <div class="label">目标校区</div>
+    <div class="label" id="lbl-campus">目标校区</div>
     <div class="grid2">
       <button class="btn on" id="btn-viikki" onclick="setCampus('viikki')">UH Viikki</button>
       <button class="btn"    id="btn-aalto"  onclick="setCampus('aalto')">Aalto Otaniemi</button>
@@ -101,7 +158,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
   </div>
 
   <div class="section">
-    <div class="label">通勤时间圈</div>
+    <div class="label" id="lbl-commute">通勤时间圈</div>
     <div id="thr-row">
       <input type="range" id="thr-slider" min="0" max="5" step="1" value="0"
              oninput="onSlider(this.value)">
@@ -110,7 +167,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
   </div>
 
   <div class="section">
-    <div class="label">学生房源</div>
+    <div class="label" id="lbl-housing">学生房源</div>
     <div class="grid2">
       <button class="btn" id="btn-hoas" onclick="toggleLayer('hoas')">HOAS</button>
       <button class="btn" id="btn-hys"  onclick="toggleLayer('hys')">HYS</button>
@@ -119,7 +176,7 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
   </div>
 
   <div class="section">
-    <div class="label">其他图层</div>
+    <div class="label" id="lbl-other">其他图层</div>
     <div class="grid2">
       <button class="btn" id="btn-zones" onclick="toggleLayer('zones')">HSL 票价区</button>
       <button class="btn" id="btn-walk"  onclick="toggleLayer('walk')">步行圈</button>
@@ -127,14 +184,23 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
   </div>
 
   <div id="routes-section">
-    <div class="routes-head">
-      <div class="label">公交线路</div>
-      <div>
-        <button class="text-link" onclick="allRoutes(true)">全选</button>&nbsp;
-        <button class="text-link" onclick="allRoutes(false)">全隐</button>
+    <div class="routes-head" onclick="toggleRoutePanel()" style="cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span id="routes-arrow" style="font-size:10px;color:#9ca3af;">▼</span>
+        <div class="label" id="lbl-routes" style="margin:0;">公交线路</div>
+      </div>
+      <div onclick="event.stopPropagation()">
+        <button class="text-link" id="btn-all-routes" onclick="allRoutes(true)">全选</button>&nbsp;
+        <button class="text-link" id="btn-none-routes" onclick="allRoutes(false)">全隐</button>
       </div>
     </div>
     <div id="route-list"></div>
+  </div>
+
+  <div id="lang-bar">
+    <button class="lang-btn on" id="lang-zh" onclick="setLang('zh')">中文</button>
+    <button class="lang-btn"    id="lang-en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn"    id="lang-fi" onclick="setLang('fi')">FI</button>
   </div>
 </div>
 
@@ -142,11 +208,22 @@ html, body { height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', sa
 </div>
 
 <div id="commute-legend">
-  <div class="leg-row"><div class="leg-line" style="background:#22c55e"></div>10 分钟</div>
-  <div class="leg-row"><div class="leg-line" style="background:#0f766e"></div>15 分钟</div>
-  <div class="leg-row"><div class="leg-line" style="background:#2563eb"></div>20 分钟</div>
-  <div class="leg-row"><div class="leg-line" style="background:#f97316"></div>30 分钟</div>
-  <div class="leg-row"><div class="leg-line" style="background:#7c3aed"></div>40 分钟</div>
+  <div class="leg-row"><div class="leg-line" style="background:#22c55e"></div><span class="leg-min" data-min="10">10 分钟</span></div>
+  <div class="leg-row"><div class="leg-line" style="background:#0f766e"></div><span class="leg-min" data-min="15">15 分钟</span></div>
+  <div class="leg-row"><div class="leg-line" style="background:#2563eb"></div><span class="leg-min" data-min="20">20 分钟</span></div>
+  <div class="leg-row"><div class="leg-line" style="background:#f97316"></div><span class="leg-min" data-min="30">30 分钟</span></div>
+  <div class="leg-row"><div class="leg-line" style="background:#7c3aed"></div><span class="leg-min" data-min="40">40 分钟</span></div>
+</div>
+
+<div id="gs-wrap">
+  <input id="gs-input" type="text" placeholder="🔍 搜索公寓地址…" oninput="onSearchInput(this.value)" onfocus="if(this.value.trim())document.getElementById('gs-results').classList.add('visible')">
+  <div id="gs-results"></div>
+  <div id="super-btns">
+    <button class="s-btn" id="sbtn-k"     onclick="toggleSuper('k')"     title="K超市">K超</button>
+    <button class="s-btn" id="sbtn-s"     onclick="toggleSuper('s')"     title="S超市">S超</button>
+    <button class="s-btn" id="sbtn-lidl"  onclick="toggleSuper('lidl')"  title="Lidl">Lidl</button>
+    <button class="s-btn" id="sbtn-jiahe" onclick="toggleSuper('jiahe')" title="Asian supermarkets">Asia</button>
+  </div>
 </div>
 
 <div id="loading">加载中…</div>
@@ -182,10 +259,12 @@ let threshold = 0;
 const layerOn = { hoas:false, hys:false, ayy:false, zones:false, walk:false };
 const cache   = { commute:{}, hoas:{}, hys:{}, ayy:null, zones:null };
 const routeGroups = {};
+const routeCBs    = {};   // sn → checkbox element
+const VIIKKI_ROUTES = new Set(['15','506','57','70','701','73','73N','74','74N','77','78','78N','79','79N']);
+const AALTO_ROUTES  = new Set(['15', 'M2']);
 
 /* ── Map ── */
 const map = L.map('map', { zoomControl:false, preferCanvas:true }).setView(HOME, 13);
-L.control.zoom({ position:'bottomright' }).addTo(map);
 L.control.scale({ imperial:false, position:'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -238,29 +317,54 @@ function rebuildWalkCircles(c) {
   walkGroup.clearLayers();
   const center = CAMPUS_CENTER[c];
   L.circle(center, { radius:10*WALK_SPEED, color:'#16a34a', weight:1.5, dashArray:'5 4', fill:false, opacity:.55 })
-    .bindPopup('10 分钟步行圈（~800 m）').addTo(walkGroup);
+    .bindPopup(T('walk_10')).addTo(walkGroup);
   L.circle(center, { radius:15*WALK_SPEED, color:'#0f766e', weight:1.5, dashArray:'8 5', fill:false, opacity:.45 })
-    .bindPopup('15 分钟步行圈（~1200 m）').addTo(walkGroup);
+    .bindPopup(T('walk_15')).addTo(walkGroup);
 }
 
-/* ── House icon factory ── */
-function houseIcon(color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="30" viewBox="0 0 28 30">
-    <polygon points="14,1 1,13 5,13 5,29 23,29 23,13 27,13"
-      fill="${color}" stroke="white" stroke-width="2" stroke-linejoin="round"/>
-    <rect x="10" y="18" width="8" height="11" fill="rgba(255,255,255,0.3)" rx="1"/>
-  </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize:[28,30], iconAnchor:[14,30], popupAnchor:[0,-30] });
+function houseEmoji(border) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:26px;height:26px;line-height:22px;text-align:center;font-size:16px;background:#fff;border:2px solid ${border};border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.35);">🏠</div>`,
+    iconSize: [26,26], iconAnchor: [13,26], popupAnchor: [0,-28],
+  });
 }
-const ICON_HOAS = houseIcon('#dc2626');
-const ICON_HYS  = houseIcon('#2563eb');
-const ICON_AYY  = houseIcon('#7c3aed');
+const ICON_HOAS = houseEmoji('#dc2626');
+const ICON_HYS  = houseEmoji('#2563eb');
+const ICON_AYY  = houseEmoji('#7c3aed');
+const TYPE_COLOR = { HOAS:'#dc2626', HYS:'#2563eb', AYY:'#7c3aed' };
 
-const commuteGroup = L.layerGroup().addTo(map);
-const hoasGroup    = L.layerGroup().addTo(map);
-const hysGroup     = L.layerGroup().addTo(map);
-const ayyGroup     = L.layerGroup().addTo(map);
-const zonesGroup   = L.layerGroup().addTo(map);
+/* ── Supermarket icons ── */
+const SUPER_CFG = {
+  k:     { bg:'#f37021', logo:'assets/logo_k.svg',    file:'data/supermarkets_k.geojson' },
+  s:     { bg:'#00aa46', logo:'assets/logo_s.svg',    file:'data/supermarkets_s.geojson' },
+  lidl:  { bg:'#0050aa', logo:'assets/logo_lidl.png', file:'data/supermarkets_lidl.geojson' },
+  jiahe: { bg:'#c0392b', text:'Asia',                  file:'data/supermarkets_jiahe.geojson' },
+};
+function superIcon(bg, logo) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:1.5px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.28);overflow:hidden;display:flex;align-items:center;justify-content:center;"><img src="${logo}" style="width:19px;height:19px;object-fit:contain;"></div>`,
+    iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-13],
+  });
+}
+function superTextIcon(bg, text) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:1.5px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;line-height:1;">${text}</div>`,
+    iconSize:[22,22], iconAnchor:[11,11], popupAnchor:[0,-13],
+  });
+}
+const superGroups = { k: L.layerGroup(), s: L.layerGroup(), lidl: L.layerGroup(), jiahe: L.layerGroup() };
+const superOn     = { k: false, s: false, lidl: false, jiahe: false };
+const superCache  = { k: null, s: null, lidl: null, jiahe: null };
+
+const commuteGroup  = L.layerGroup().addTo(map);
+const hoasGroup     = L.layerGroup().addTo(map);
+const hysGroup      = L.layerGroup().addTo(map);
+const ayyGroup      = L.layerGroup().addTo(map);
+const zonesGroup    = L.layerGroup().addTo(map);
+const gsMarkGroup   = L.layerGroup().addTo(map);
 
 /* ── Loading ── */
 let loadN = 0;
@@ -300,8 +404,12 @@ async function initRoutes() {
 
         const row = document.createElement('div'); row.className = 'r-row';
         const lbl = document.createElement('label');
-        const cb  = document.createElement('input'); cb.type='checkbox'; cb.checked=true;
+        const cb  = document.createElement('input'); cb.type='checkbox';
+        const defaultOn = campus === 'viikki' ? VIIKKI_ROUTES.has(sn) : AALTO_ROUTES.has(sn);
+        cb.checked = defaultOn;
+        if (!defaultOn) map.removeLayer(grp);
         cb.onchange = () => cb.checked ? grp.addTo(map) : map.removeLayer(grp);
+        routeCBs[sn] = cb;
         const bar = document.createElement('span'); bar.className='r-bar'; bar.style.background=info.color;
         const snEl = document.createElement('span'); snEl.className='r-sn'; snEl.textContent=sn;
         const nmEl = document.createElement('span'); nmEl.className='r-nm';
@@ -314,6 +422,16 @@ async function initRoutes() {
 function allRoutes(on) {
   Object.values(routeGroups).forEach(g => on ? g.addTo(map) : map.removeLayer(g));
   document.querySelectorAll('#route-list input').forEach(cb => cb.checked = on);
+}
+
+function applyRouteDefaults(c) {
+  Object.entries(routeCBs).forEach(([sn, cb]) => {
+    const on = c === 'viikki' ? VIIKKI_ROUTES.has(sn) : AALTO_ROUTES.has(sn);
+    cb.checked = on;
+    const grp = routeGroups[sn];
+    if (!grp) return;
+    on ? grp.addTo(map) : map.removeLayer(grp);
+  });
 }
 
 function bringRoutesToTop() {
@@ -348,7 +466,7 @@ function renderCommute(data, minutes) {
     const lls = f.geometry.coordinates[0].map(c => [c[1],c[0]]);
     const color = COMMUTE_COLORS[minutes] || '#666';
     L.polygon(lls, { color, weight:2.5, fill:false, dashArray:'6 4', opacity:.9 })
-      .bindPopup(minutes+' 分钟通勤圈（早高峰 GTFS+等候时间）')
+      .bindPopup(T('commute_pp', minutes))
       .addTo(commuteGroup);
   });
   document.getElementById('commute-legend').classList.add('visible');
@@ -383,25 +501,20 @@ async function setCampus(c) {
   document.getElementById('thr-label').textContent = '关闭';
   document.getElementById('commute-legend').classList.remove('visible');
 
-  // Housing availability: HYS = UH only, AYY = Aalto only, HOAS = both
+  // Housing visibility: HYS = UH Viikki only, AYY = Aalto only, HOAS = both
   const btnHys = document.getElementById('btn-hys');
   const btnAyy = document.getElementById('btn-ayy');
   if (c === 'aalto') {
     btnHys.style.display = 'none';
     btnAyy.style.display = '';
-    if (layerOn.hys) {
-      layerOn.hys = false; hysGroup.clearLayers();
-      btnHys.classList.remove('on-blue');
-    }
+    if (layerOn.hys) { layerOn.hys = false; hysGroup.clearLayers(); btnHys.classList.remove('on-blue'); }
   } else {
     btnAyy.style.display = 'none';
     btnHys.style.display = '';
-    if (layerOn.ayy) {
-      layerOn.ayy = false; ayyGroup.clearLayers();
-      btnAyy.classList.remove('on');
-    }
+    if (layerOn.ayy) { layerOn.ayy = false; ayyGroup.clearLayers(); btnAyy.classList.remove('on'); }
   }
 
+  applyRouteDefaults(c);
   const v = CAMPUS_CFG[c].view;
   if (v.bounds) map.fitBounds(v.bounds, { padding:[24,24] });
   else map.setView(v.ll, v.zoom);
@@ -413,13 +526,18 @@ async function setCampus(c) {
 /* ── Housing ── */
 function hoasPopup(p) {
   const rent = [p.min_rent!=null?'€'+p.min_rent:null, p.max_rent!=null&&p.max_rent!==p.min_rent?'€'+p.max_rent:null].filter(Boolean).join('–');
-  const commute = p.aalto_otaniemi_min!=null ? '<br>🚇 至 Aalto: ~'+p.aalto_otaniemi_min+' min' : '';
+  const commute = p.aalto_otaniemi_min!=null ? '<br>'+T('to_aalto', p.aalto_otaniemi_min) : '';
   const cond = p.condition ? '<br>'+p.condition : '';
-  return '<b>'+(p.address||'HOAS')+'</b>'+(rent?'<br>'+rent+'/月':'')+commute+cond+'<br><a href="'+p.url+'" target="_blank">查看 →</a>';
+  let years = '';
+  if (p.year_built) {
+    const reno = p.year_renovated && p.year_renovated.length ? ' → ' + p.year_renovated.join(', ') : '';
+    years = '<br><span style="color:#6b7280;font-size:11px;">🏗 ' + p.year_built + reno + '</span>';
+  }
+  return '<b>'+(p.address||'HOAS')+'</b>'+(rent?'<br>'+rent+T('per_month'):'')+commute+cond+years+'<br><a href="'+p.url+'" target="_blank">'+T('view')+'</a>';
 }
 function hysPopup(p) {
-  const commute = p.aalto_otaniemi_min!=null ? '<br>🚇 至 Aalto: ~'+p.aalto_otaniemi_min+' min' : '';
-  return '<b>'+(p.address||p.name||'HYS')+'</b>'+commute+'<br><a href="'+p.url+'" target="_blank">查看 →</a>';
+  const commute = p.aalto_otaniemi_min!=null ? '<br>'+T('to_aalto', p.aalto_otaniemi_min) : '';
+  return '<b>'+(p.address||p.name||'HYS')+'</b>'+commute+'<br><a href="'+p.url+'" target="_blank">'+T('view')+'</a>';
 }
 
 async function loadHousing(type) {
@@ -441,11 +559,11 @@ async function loadHousing(type) {
 
 /* ── AYY ── */
 function ayyPopup(p) {
-  const rent = p.rent ? `<br>${p.rent}/月` : '';
+  const rent = p.rent ? `<br>${p.rent}${T('per_month')}` : '';
   const types = p.room_types ? `<br>${p.room_types}` : '';
   const yr = p.year_built ? ` (${p.year_built})` : '';
-  const units = p.n_units ? `<br>${p.n_units} 套` : '';
-  return `<b>${p.address}</b>${yr}<br>${p.city}${rent}${types}${units}<br><a href="${p.url}" target="_blank">楼栋详情 →</a>`;
+  const units = p.n_units ? `<br>${T('n_units', p.n_units)}` : '';
+  return `<b>${p.address}</b>${yr}<br>${p.city}${rent}${types}${units}<br><a href="${p.url}" target="_blank">${T('bldg_detail')}</a>`;
 }
 
 async function loadAyy() {
@@ -490,6 +608,281 @@ async function toggleLayer(type) {
   } else if (type === 'walk') {
     if (on) { rebuildWalkCircles(campus); walkGroup.addTo(map); } else map.removeLayer(walkGroup);
   }
+}
+
+/* ── Global search ── */
+let gsIndex = null;
+let gsIndexPromise = null;
+let gsTimer = null;
+
+async function buildSearchIndex() {
+  const [hoasV, hoasA, hysV, hysA, ayy] = await Promise.all([
+    fetchJson('data/hoas_listings.geojson'),
+    fetchJson('data/hoas_listings_aalto_otaniemi.geojson'),
+    fetchJson('data/hys_listings.geojson'),
+    fetchJson('data/hys_listings_aalto_otaniemi.geojson'),
+    fetchJson('data/ayy_listings.geojson'),
+  ]);
+
+  const idx = { HOAS: [], HYS: [], AYY: [] };
+  const seen = new Set();
+
+  [...hoasV.features, ...hoasA.features].forEach(f => {
+    const addr = f.properties.address || '';
+    if (seen.has('hoas:' + addr)) return;
+    seen.add('hoas:' + addr);
+    const [lon, lat] = f.geometry.coordinates;
+    const p = f.properties;
+    const rent = p.min_rent != null
+      ? '€' + p.min_rent + (p.max_rent && p.max_rent !== p.min_rent ? '–' + p.max_rent : '') + '/月'
+      : '';
+    idx.HOAS.push({ address: addr, city: p.city || 'Helsinki', meta: rent, coords: [lat, lon], url: p.url });
+  });
+
+  [...hysV.features, ...hysA.features].forEach(f => {
+    const addr = f.properties.address || f.properties.name || '';
+    if (seen.has('hys:' + addr)) return;
+    seen.add('hys:' + addr);
+    const [lon, lat] = f.geometry.coordinates;
+    idx.HYS.push({ address: addr, city: 'Helsinki', meta: '', coords: [lat, lon], url: f.properties.url });
+  });
+
+  ayy.features.forEach(f => {
+    const [lon, lat] = f.geometry.coordinates;
+    const p = f.properties;
+    idx.AYY.push({ address: p.address, city: p.city || '', meta: p.rent ? p.rent + '/月' : '', coords: [lat, lon], url: p.url });
+  });
+
+  return idx;
+}
+
+async function ensureGsIndex() {
+  if (gsIndex) return;
+  if (!gsIndexPromise) gsIndexPromise = buildSearchIndex();
+  gsIndex = await gsIndexPromise;
+}
+
+function onSearchInput(val) {
+  clearTimeout(gsTimer);
+  gsTimer = setTimeout(() => globalSearch(val), 150);
+}
+
+async function globalSearch(query) {
+  const resultsEl = document.getElementById('gs-results');
+  const q = query.trim().toLowerCase();
+  if (!q) { resultsEl.classList.remove('visible'); return; }
+
+  await ensureGsIndex();
+  resultsEl.innerHTML = '';
+  let total = 0;
+
+  for (const [type, items] of Object.entries(gsIndex)) {
+    const matches = items.filter(it =>
+      it.address.toLowerCase().includes(q) || it.city.toLowerCase().includes(q)
+    );
+    if (!matches.length) continue;
+    total += matches.length;
+
+    const head = document.createElement('div');
+    head.className = 'gs-group-head';
+    head.textContent = type;
+    resultsEl.appendChild(head);
+
+    matches.slice(0, 6).forEach(it => {
+      const el = document.createElement('div');
+      el.className = 'gs-item';
+      el.innerHTML = `<span class="gs-addr">${it.address}</span><span class="gs-meta">${it.city}${it.meta ? ' · ' + it.meta : ''}</span>`;
+      el.onclick = () => {
+        gsMarkGroup.clearLayers();
+        const iconMap = { HOAS: ICON_HOAS, HYS: ICON_HYS, AYY: ICON_AYY };
+        const m = L.marker(it.coords, { icon: iconMap[type] || ICON_HOAS })
+          .bindPopup(`<b>${it.address}</b><br>${it.city}${it.meta ? '<br>' + it.meta : ''}<br><a href="${it.url}" target="_blank">${T('view_detail')}</a>`)
+          .addTo(gsMarkGroup);
+        map.flyTo(it.coords, 16, { duration: 0.8 });
+        setTimeout(() => m.openPopup(), 850);
+        document.getElementById('gs-input').value = it.address;
+        resultsEl.classList.remove('visible');
+      };
+      resultsEl.appendChild(el);
+    });
+    if (matches.length > 6) {
+      const more = document.createElement('div');
+      more.className = 'gs-more';
+      more.textContent = `还有 ${matches.length - 6} 处…`;
+      resultsEl.appendChild(more);
+    }
+  }
+
+  if (!total) {
+    resultsEl.innerHTML = '<div class="gs-empty">无匹配结果</div>';
+  }
+  resultsEl.classList.add('visible');
+}
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('gs-wrap').contains(e.target))
+    document.getElementById('gs-results').classList.remove('visible');
+});
+
+/* ── Supermarkets ── */
+async function toggleSuper(key) {
+  superOn[key] = !superOn[key];
+  document.getElementById('sbtn-' + key).classList.toggle('on', superOn[key]);
+  const grp = superGroups[key];
+  if (!superOn[key]) { map.removeLayer(grp); return; }
+  if (!superCache[key]) {
+    setLoading(true);
+    try { superCache[key] = await fetchJson(SUPER_CFG[key].file); }
+    finally { setLoading(false); }
+    const cfg = SUPER_CFG[key];
+    const icon = cfg.logo ? superIcon(cfg.bg, cfg.logo) : superTextIcon(cfg.bg, cfg.text);
+    superCache[key].features.forEach(f => {
+      const [lon, lat] = f.geometry.coordinates;
+      const p = f.properties;
+      const addr = p.address ? `<br>${p.address}` : '';
+      const hours = p.opening_hours ? `<br><span style="color:#6b7280;font-size:11px;">${p.opening_hours}</span>` : '';
+      L.marker([lat, lon], { icon })
+        .bindPopup(`<b>${p.name}</b>${addr}${hours}`)
+        .addTo(grp);
+    });
+  }
+  grp.addTo(map);
+}
+
+/* ── i18n ── */
+let lang = 'zh';
+const STRINGS = {
+  zh: {
+    title:      '校园通勤地图',
+    lbl_campus:  '目标校区',
+    lbl_commute: '通勤时间圈',
+    lbl_housing: '学生房源',
+    lbl_other:   '其他图层',
+    lbl_routes:  '公交线路',
+    btn_zones:   'HSL 票价区',
+    btn_walk:    '步行圈',
+    btn_all:     '全选',
+    btn_none:    '全隐',
+    btn_k:       'K超',
+    btn_s:       'S超',
+    loading:     '加载中…',
+    search_ph:   '🔍 搜索公寓地址…',
+    thr_off:     '关闭',
+    thr_min:     n => n + ' min',
+    leg_min:     n => n + ' 分钟',
+    walk_10:     '10 分钟步行圈（~800 m）',
+    walk_15:     '15 分钟步行圈（~1200 m）',
+    commute_pp:  n => n + ' 分钟通勤圈（早高峰 GTFS+等候时间）',
+    per_month:   '/月',
+    to_aalto:    n => `🚇 至 Aalto: ~${n} min`,
+    view:        '查看 →',
+    n_units:     n => `${n} 套`,
+    bldg_detail: '楼栋详情 →',
+    view_detail: '查看详情 →',
+  },
+  en: {
+    title:      'Campus Commute Map',
+    lbl_campus:  'Target Campus',
+    lbl_commute: 'Commute Isochrone',
+    lbl_housing: 'Student Housing',
+    lbl_other:   'Other Layers',
+    lbl_routes:  'Transit Routes',
+    btn_zones:   'HSL Fare Zones',
+    btn_walk:    'Walking Radius',
+    btn_all:     'All',
+    btn_none:    'None',
+    btn_k:       'K-mkt',
+    btn_s:       'S-mkt',
+    loading:     'Loading…',
+    search_ph:   '🔍 Search address…',
+    thr_off:     'Off',
+    thr_min:     n => n + ' min',
+    leg_min:     n => n + ' min',
+    walk_10:     '10-min walking radius (~800 m)',
+    walk_15:     '15-min walking radius (~1200 m)',
+    commute_pp:  n => n + '-min isochrone (peak hour, GTFS)',
+    per_month:   '/month',
+    to_aalto:    n => `🚇 to Aalto: ~${n} min`,
+    view:        'View →',
+    n_units:     n => `${n} units`,
+    bldg_detail: 'Building details →',
+    view_detail: 'View details →',
+  },
+  fi: {
+    title:      'Kampuspendelöintikartta',
+    lbl_campus:  'Kohdekampus',
+    lbl_commute: 'Pendelöintiaika',
+    lbl_housing: 'Opiskelija-asunnot',
+    lbl_other:   'Muut tasot',
+    lbl_routes:  'Linjat',
+    btn_zones:   'HSL vyöhykkeet',
+    btn_walk:    'Kävelysäde',
+    btn_all:     'Kaikki',
+    btn_none:    'Piilota',
+    btn_k:       'K-mkt',
+    btn_s:       'S-mkt',
+    loading:     'Ladataan…',
+    search_ph:   '🔍 Hae osoitetta…',
+    thr_off:     'Pois',
+    thr_min:     n => n + ' min',
+    leg_min:     n => n + ' min',
+    walk_10:     '10 min kävelysäde (~800 m)',
+    walk_15:     '15 min kävelysäde (~1200 m)',
+    commute_pp:  n => n + ' min pendelöintisäde (ruuhka-aika, GTFS)',
+    per_month:   '/kk',
+    to_aalto:    n => `🚇 Aaltoon: ~${n} min`,
+    view:        'Katso →',
+    n_units:     n => `${n} asuntoa`,
+    bldg_detail: 'Rakennuksen tiedot →',
+    view_detail: 'Katso →',
+  },
+};
+
+function T(key, ...args) {
+  const v = STRINGS[lang][key];
+  return typeof v === 'function' ? v(...args) : v;
+}
+
+function setLang(l) {
+  lang = l;
+  ['zh','en','fi'].forEach(x => document.getElementById('lang-'+x).classList.toggle('on', x===l));
+  const s = STRINGS[l];
+  document.getElementById('ui-title').textContent     = s.title;
+  document.getElementById('lbl-campus').textContent   = s.lbl_campus;
+  document.getElementById('lbl-commute').textContent  = s.lbl_commute;
+  document.getElementById('lbl-housing').textContent  = s.lbl_housing;
+  document.getElementById('lbl-other').textContent    = s.lbl_other;
+  document.getElementById('lbl-routes').textContent   = s.lbl_routes;
+  document.getElementById('btn-zones').textContent    = s.btn_zones;
+  document.getElementById('btn-walk').textContent     = s.btn_walk;
+  document.getElementById('btn-all-routes').textContent  = s.btn_all;
+  document.getElementById('btn-none-routes').textContent = s.btn_none;
+  document.getElementById('sbtn-k').textContent       = s.btn_k;
+  document.getElementById('sbtn-s').textContent       = s.btn_s;
+  document.getElementById('loading').childNodes.forEach(n => { if (n.nodeType===3) n.textContent = s.loading; });
+  document.getElementById('gs-input').placeholder     = s.search_ph;
+  // Slider label: re-apply current value
+  const idx = Number(document.getElementById('thr-slider').value);
+  document.getElementById('thr-label').textContent = idx === 0 ? s.thr_off : s.thr_min(THR_STEPS[idx]);
+  // Commute legend
+  document.querySelectorAll('.leg-min').forEach(el => {
+    el.textContent = s.leg_min(el.dataset.min);
+  });
+  // Rebuild walk circles if visible (to update popup text)
+  if (layerOn.walk) rebuildWalkCircles(campus);
+  // Rebind housing popups by reloading visible layers
+  if (layerOn.hoas) loadHousing('hoas');
+  if (layerOn.hys)  loadHousing('hys');
+  if (layerOn.ayy)  loadAyy();
+}
+
+/* ── Routes collapse ── */
+function toggleRoutePanel() {
+  const list  = document.getElementById('route-list');
+  const arrow = document.getElementById('routes-arrow');
+  const open  = list.style.display !== 'none';
+  list.style.display  = open ? 'none' : '';
+  arrow.textContent   = open ? '▶' : '▼';
 }
 
 /* ── Init ── */
